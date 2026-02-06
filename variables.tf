@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "lambda_function_name" {
   description = "Nombre de la función Lambda"
   type        = string
-  default     = "rds-aurora-backup-automation-3"
+  default     = "rds-aurora-backup-automation"
 }
 
 variable "backup_vault_name" {
