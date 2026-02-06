@@ -26,7 +26,7 @@ Solución completa de automatización de backups para instancias RDS y clusters 
 ## 📁 Estructura del Proyecto
 
 ```
-rds-backup-automation-2/
+rds-backup-automation/
 ├── main.tf                              # Configuración principal de recursos
 ├── variables.tf                         # Definición de variables
 ├── outputs.tf                           # Outputs de Terraform
@@ -55,7 +55,7 @@ aws configure list
 
 #### 1. Clonar y Configurar
 ```bash
-cd Terraform/rds-backup-automation-2
+cd Terraform/rds-backup-automation
 
 # Editar terraform.tfvars según tus necesidades
 nano terraform.tfvars
@@ -98,7 +98,7 @@ terraform apply
 | Variable | Tipo | Default | Descripción |
 |----------|------|---------|-------------|
 | `aws_region` | string | `us-east-1` | Región de AWS |
-| `lambda_function_name` | string | `rds-aurora-backup-automation-2` | Nombre de la función Lambda |
+| `lambda_function_name` | string | `rds-aurora-backup-automation` | Nombre de la función Lambda |
 | `backup_vault_name` | string | `Default` | Nombre del Backup Vault |
 | `use_existing_vault` | bool | `true` | Usar vault existente o crear nuevo |
 | `retention_days` | number | `5` | Días de retención de backups |
@@ -213,15 +213,15 @@ resource "aws_rds_cluster" "example" {
 ### CloudWatch Logs
 ```bash
 # Ver logs en tiempo real
-aws logs tail /aws/lambda/rds-aurora-backup-automation-2 --follow
+aws logs tail /aws/lambda/rds-aurora-backup-automation --follow
 
 # Buscar errores
 aws logs filter-log-events \
-  --log-group-name /aws/lambda/rds-aurora-backup-automation-2 \
+  --log-group-name /aws/lambda/rds-aurora-backup-automation \
   --filter-pattern "ERROR"
 
 # Ver últimos 100 eventos
-aws logs tail /aws/lambda/rds-aurora-backup-automation-2 --since 1h
+aws logs tail /aws/lambda/rds-aurora-backup-automation --since 1h
 ```
 
 ### Formato de Logs
@@ -255,7 +255,7 @@ aws logs tail /aws/lambda/rds-aurora-backup-automation-2 --since 1h
 aws cloudwatch get-metric-statistics \
   --namespace AWS/Lambda \
   --metric-name Invocations \
-  --dimensions Name=FunctionName,Value=rds-aurora-backup-automation-2 \
+  --dimensions Name=FunctionName,Value=rds-aurora-backup-automation \
   --start-time 2024-01-01T00:00:00Z \
   --end-time 2024-01-02T00:00:00Z \
   --period 3600 \
@@ -268,7 +268,7 @@ aws cloudwatch get-metric-statistics \
 ```bash
 # Invocar Lambda manualmente
 aws lambda invoke \
-  --function-name rds-aurora-backup-automation-2 \
+  --function-name rds-aurora-backup-automation \
   --payload '{}' \
   response.json
 
@@ -332,13 +332,13 @@ retention_days = 30  # 30 días de retención
 # Crear múltiples instancias del módulo con diferentes schedules
 # main.tf
 module "backup_daily" {
-  source = "./rds-backup-automation-2"
+  source = "./rds-backup-automation"
   backup_schedule = "cron(0 2 * * ? *)"
   backup_tag_value = "Daily"
 }
 
 module "backup_weekly" {
-  source = "./rds-backup-automation-2"
+  source = "./rds-backup-automation"
   backup_schedule = "cron(0 3 ? * SUN *)"
   backup_tag_value = "Weekly"
   retention_days = 30
@@ -376,27 +376,27 @@ aws rds add-tags-to-resource \
 ```bash
 # Verificar permisos del rol
 aws iam get-role-policy \
-  --role-name rds-aurora-backup-automation-2-lambda-role \
-  --policy-name rds-aurora-backup-automation-2-policy
+  --role-name rds-aurora-backup-automation-lambda-role \
+  --policy-name rds-aurora-backup-automation-policy
 
 # Verificar que el rol puede asumir Lambda
 aws iam get-role \
-  --role-name rds-aurora-backup-automation-2-lambda-role
+  --role-name rds-aurora-backup-automation-lambda-role
 ```
 
 ### Backups No Se Ejecutan
 ```bash
 # Verificar EventBridge rule
 aws events describe-rule \
-  --name rds-aurora-backup-automation-2-schedule
+  --name rds-aurora-backup-automation-schedule
 
 # Verificar targets
 aws events list-targets-by-rule \
-  --rule rds-aurora-backup-automation-2-schedule
+  --rule rds-aurora-backup-automation-schedule
 
 # Verificar permisos de invocación
 aws lambda get-policy \
-  --function-name rds-aurora-backup-automation-2
+  --function-name rds-aurora-backup-automation
 ```
 
 ### Lambda Timeout
@@ -474,13 +474,13 @@ terraform apply
 Después de `terraform apply`, obtendrás:
 
 ```hcl
-lambda_function_name = "rds-aurora-backup-automation-2"
-lambda_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:rds-aurora-backup-automation-2"
+lambda_function_name = "rds-aurora-backup-automation"
+lambda_function_arn = "arn:aws:lambda:us-east-1:123456789012:function:rds-aurora-backup-automation"
 backup_vault_name = "Default"
 backup_vault_arn = "arn:aws:backup:us-east-1:123456789012:backup-vault:Default"
 vault_source = "existing"
-cloudwatch_log_group = "/aws/lambda/rds-aurora-backup-automation-2"
-sns_topic_arn = "arn:aws:sns:us-east-1:123456789012:rds-aurora-backup-automation-2-notifications"
+cloudwatch_log_group = "/aws/lambda/rds-aurora-backup-automation"
+sns_topic_arn = "arn:aws:sns:us-east-1:123456789012:rds-aurora-backup-automation-notifications"
 backup_schedule = "cron(0 2 * * ? *)"
 ```
 
