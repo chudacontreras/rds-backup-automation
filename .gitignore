@@ -13,3 +13,6 @@ __pycache__/
 
 # Logs
 *.log
+
+.kiro/
+.obsidian/s
