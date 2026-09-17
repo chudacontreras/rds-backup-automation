@@ -11,7 +11,7 @@ terraform {
 
 provider "aws" {
   region = var.aws_region
-  profile = "default" #colaocar el propfile de AWS 
+  profile = "chuda-test" #colaocar el propfile de AWS 
 }
 
 # Data source para verificar si el vault existe (puede fallar)
